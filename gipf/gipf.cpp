@@ -548,6 +548,34 @@ struct Game {
         std::cout << outcomes.size() << "_UNIQUE_MOVES\n";
     }
 
+    void is_game_over() {
+
+        if (current_player == WHITE && board.white_reserve == 0) {
+            std::cout << "THE_WINNER_IS_BLACK\n";
+            return;
+        }
+        else if (current_player == BLACK && board.black_reserve == 0) {
+            std::cout << "THE_WINNER_IS_WHITE\n";
+            return;
+        }
+        else
+        {
+            int count = std::count(board.board.begin(), board.board.end(), EMPTY);
+            if (count == 0) {
+                if (current_player == BLACK) {
+                    std::cout << "THE_WINNER_IS_WHITE\n";
+                    return;
+                }
+                else if (current_player == WHITE) {
+                    std::cout << "THE_WINNER_IS_BLACK\n";
+                    return;
+                }
+            }
+        }
+        std::cout << "GAME_IN_PROGRESS\n";
+    }
+
+
 };
 
 
@@ -573,7 +601,10 @@ int main() {
             game.generate_all_possible_moves_count();
             std::cout << "\n";
         }
-        
+        else if (line.rfind("IS_GAME_OVER", 0) == 0) {
+            game.is_game_over();
+            std::cout << "\n";
+        }    
 
     }
 }
