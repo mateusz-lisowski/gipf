@@ -32,6 +32,17 @@ struct Move {
 
 struct Board {
 
+    bool operator==(const Board& other)
+    {
+        return white_reserve == other.white_reserve &&
+            black_reserve == other.black_reserve &&
+            board == other.board;
+    }
+    bool operator<(const Board& other)
+    {
+        return board < other.board;
+    }
+
     int white_reserve;
     int black_reserve;
 
@@ -481,6 +492,62 @@ struct Game {
         advance_turn(board);
     }
 
+    std::vector<Board> generate_uniq_outcomes(Board& b) {
+        
+        std::vector<Board> outcomes;
+
+        auto collisions = generate_all_collisions(b);
+        if (collisions.empty()) {
+            outcomes.push_back(b);
+        }
+        else
+        {
+            for (auto& collision : collisions) {
+                auto copy = b;
+                remove_collision(b, collision);
+                auto new_collisions = generate_uniq_outcomes(b);
+                outcomes.insert(outcomes.end(), new_collisions.begin(), new_collisions.end());
+                b.white_reserve = copy.white_reserve;
+                b.black_reserve = copy.black_reserve;
+                std::copy(copy.board.begin(), copy.board.end(), b.board.begin());
+            }
+        }
+
+        std::sort(outcomes.begin(), outcomes.end());
+        outcomes.erase(std::unique(outcomes.begin(), outcomes.end()), outcomes.end());
+
+        return outcomes;
+        
+    }
+
+    std::vector<Board> generate_all_possible_uniq_moves(Board& b) {
+        
+        std::vector<Board> outcomes;
+
+        for (auto& m : moves) {
+            auto copy = b;
+            char* ch = get_char_at_index(copy, m.x, m.y);
+
+            if (!move(ch, m.direction)) {
+                continue;
+            }
+
+            auto new_outcomes = generate_uniq_outcomes(copy);
+            outcomes.insert(outcomes.end(), new_outcomes.begin(), new_outcomes.end());
+        }
+        
+        std::sort(outcomes.begin(), outcomes.end());
+        outcomes.erase(std::unique(outcomes.begin(), outcomes.end()), outcomes.end());
+
+        return outcomes;
+    }
+
+    void generate_all_possible_moves_count() {
+        
+        auto outcomes = generate_all_possible_uniq_moves(board);
+        std::cout << outcomes.size() << "_UNIQUE_MOVES\n";
+    }
+
 };
 
 
@@ -502,6 +569,11 @@ int main() {
             game.do_move(std::string(line.begin() + 8, line.end()));
             std::cout << "\n";
         }
+        else if (line.rfind("GEN_ALL_POS_MOV_NUM", 0) == 0) {
+            game.generate_all_possible_moves_count();
+            std::cout << "\n";
+        }
+        
 
     }
 }
