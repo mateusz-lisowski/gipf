@@ -36,7 +36,8 @@ struct Board {
     {
         return white_reserve == other.white_reserve &&
             black_reserve == other.black_reserve &&
-            board == other.board;
+            board == other.board &&
+            current_player == other.current_player;
     }
     bool operator<(const Board& other)
     {
@@ -45,14 +46,13 @@ struct Board {
 
     int white_reserve;
     int black_reserve;
+    char current_player;
 
     std::vector<char> board;
 
 };
 
 struct Game {
-
-    char current_player;
 
     int size;
     int pieces_limit;
@@ -120,7 +120,7 @@ struct Game {
     void load_game_board() {
 
         scanf("%d %d %d %d\n", &size, &pieces_limit, &white_player_pieces, &black_player_pieces);
-        scanf("%d %d %c", &board.white_reserve, &board.black_reserve, &current_player);
+        scanf("%d %d %c", &board.white_reserve, &board.black_reserve, &board.current_player);
 
         create_empty_board();
 
@@ -211,7 +211,7 @@ struct Game {
         }
 
         std::cout << size << " " << pieces_limit << " " << white_player_pieces << " " << black_player_pieces << "\n";
-        std::cout << board.white_reserve << " " << board.black_reserve << " " << current_player << "\n";
+        std::cout << board.white_reserve << " " << board.black_reserve << " " << board.current_player << "\n";
         
         auto it = board.board.begin();
         auto end = board.board.end();
@@ -251,13 +251,13 @@ struct Game {
 
     void advance_turn(Board& b) {
 
-        if (current_player == WHITE) {
-            current_player = BLACK;
+        if (b.current_player == WHITE) {
+            b.current_player = BLACK;
             b.white_reserve--;
         }
 
-        else if (current_player == BLACK) {
-            current_player = WHITE;
+        else if (b.current_player == BLACK) {
+            b.current_player = WHITE;
             b.black_reserve--;
         }
     }
@@ -293,9 +293,9 @@ struct Game {
     
     }
 
-    bool move(char* from, int direction) {
+    bool move(Board& b, char* from, int direction) {
         
-        char token = current_player;
+        char token = b.current_player;
 
         while (true) {
             
@@ -436,7 +436,7 @@ struct Game {
         from = to;
         auto copy = board;
 
-        if (!move(from, direction)) {
+        if (!move(board, from, direction)) {
             board = copy;
             std::cout << "BAD_MOVE_ROW_IS_FULL\n";
             return;
@@ -509,6 +509,7 @@ struct Game {
                 outcomes.insert(outcomes.end(), new_collisions.begin(), new_collisions.end());
                 b.white_reserve = copy.white_reserve;
                 b.black_reserve = copy.black_reserve;
+                b.current_player = copy.current_player;
                 std::copy(copy.board.begin(), copy.board.end(), b.board.begin());
             }
         }
@@ -528,7 +529,7 @@ struct Game {
             auto copy = b;
             char* ch = get_char_at_index(copy, m.x, m.y);
 
-            if (!move(ch, m.direction)) {
+            if (!move(copy, ch, m.direction)) {
                 continue;
             }
 
@@ -539,42 +540,73 @@ struct Game {
         std::sort(outcomes.begin(), outcomes.end());
         outcomes.erase(std::unique(outcomes.begin(), outcomes.end()), outcomes.end());
 
+        for (auto& outcome : outcomes) {
+            advance_turn(outcome);
+        }
         return outcomes;
     }
 
     void generate_all_possible_moves_count() {
-        
         auto outcomes = generate_all_possible_uniq_moves(board);
         std::cout << outcomes.size() << "_UNIQUE_MOVES\n";
     }
 
-    void is_game_over() {
+    void generate_all_possible_moves_ext_count() {
 
-        if (current_player == WHITE && board.white_reserve == 0) {
-            std::cout << "THE_WINNER_IS_BLACK\n";
-            return;
+        char current_player = board.current_player;
+        auto outcomes = generate_all_possible_uniq_moves(board);
+
+        for (auto& outcome : outcomes) {
+            char winner = settle_winner(outcome);
+            if (winner == current_player) {
+                std::cout << "1_UNIQUE_MOVES\n";
+                return;
+            }
         }
-        else if (current_player == BLACK && board.black_reserve == 0) {
-            std::cout << "THE_WINNER_IS_WHITE\n";
-            return;
+
+        std::cout << outcomes.size() << "_UNIQUE_MOVES\n";
+    }
+
+    char settle_winner(Board& b) {
+        
+        if (b.current_player == WHITE && b.white_reserve == 0) {
+            return BLACK;
+        }
+        else if (b.current_player == BLACK && b.black_reserve == 0) {
+            return WHITE;
         }
         else
         {
-            int count = std::count(board.board.begin(), board.board.end(), EMPTY);
+            int count = std::count(b.board.begin(), b.board.end(), EMPTY);
             if (count == 0) {
-                if (current_player == BLACK) {
-                    std::cout << "THE_WINNER_IS_WHITE\n";
-                    return;
+                if (b.current_player == BLACK) {
+                    return WHITE;
                 }
-                else if (current_player == WHITE) {
-                    std::cout << "THE_WINNER_IS_BLACK\n";
-                    return;
+                else if (b.current_player == WHITE) {
+                    return BLACK;
                 }
             }
         }
-        std::cout << "GAME_IN_PROGRESS\n";
+
+        return NULL;
     }
 
+    void is_game_over() {
+
+        char winner = settle_winner(board);
+
+        if (winner == WHITE) {
+            std::cout << "THE_WINNER_IS_WHITE\n";
+        }
+        else if (winner == BLACK) {
+            std::cout << "THE_WINNER_IS_BLACK\n";
+        }
+        else
+        {
+            std::cout << "GAME_IN_PROGRESS\n";
+        }
+
+    }
 
 };
 
@@ -604,7 +636,11 @@ int main() {
         else if (line.rfind("IS_GAME_OVER", 0) == 0) {
             game.is_game_over();
             std::cout << "\n";
-        }    
+        }
+        else if (line.rfind("GEN_ALL_POS_MOV_EXT_NUM", 0) == 0) {
+            game.generate_all_possible_moves_ext_count();
+            std::cout << "\n";
+        }
 
     }
 }
