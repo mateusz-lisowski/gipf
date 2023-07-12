@@ -431,6 +431,45 @@ struct Game {
             return;
         }
 
+        if (line.size() > 5) {
+
+            char col = toupper(line[6]);
+
+            int from_coll_x = line[9] - 'a';
+            int from_coll_y = line[10] - '1';
+
+            int to_coll_x = line[12] - 'a';
+            int to_coll_y = line[13] - '1';
+
+            char* from_coll = get_char_at_index(board, from_coll_x, from_coll_y);
+            char* to_coll = get_char_at_index(board, to_coll_x, to_coll_y);
+
+            if (col != *from_coll) {
+                std::cout << "WRONG_COLOR_OF_CHOSEN_ROW\n";
+                board = copy;
+                return;
+            }
+
+            int dir_coll = to_coll - from_coll;
+
+            int dir_hor = calculate_direction(DIRECTION_HOR);
+            int dir_ver = calculate_direction(DIRECTION_VERT);
+            int dir_dig = calculate_direction(DIRECTION_DIAGONAL);
+
+            if (dir_coll % dir_dig == 0) dir_coll = dir_dig * (dir_coll / abs(dir_coll));
+            else if (dir_coll % dir_ver == 0) dir_coll = dir_ver * (dir_coll / abs(dir_coll));
+            else if (dir_coll % dir_hor == 0) dir_coll = dir_hor * (dir_coll / abs(dir_coll));
+
+            char token = *from_coll;
+            if(*(from_coll - dir_coll) == token || *(to_coll + dir_coll) == token) {
+                std::cout << "WRONG_INDEX_OF_CHOSEN_ROW\n";
+                board = copy;
+                return;
+            }
+
+            remove_collision(board, Collision{from_coll, to_coll, dir_coll});
+        }
+
         auto collisions = generate_all_collisions(board);
         if (!collisions.empty()) {
             for (auto& collision : collisions) {
