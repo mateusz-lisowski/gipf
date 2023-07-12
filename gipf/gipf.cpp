@@ -362,12 +362,12 @@ struct Game {
             
             char curr = *ch;
 
-            if (curr == current_player) {
+            if (curr == token) {
                 
-                if (current_player == WHITE) {
+                if (token == WHITE) {
                     b.white_reserve++;
                 }
-                else if (current_player == BLACK) {
+                else if (token == BLACK) {
                     b.black_reserve++;
                 }
 
@@ -425,15 +425,21 @@ struct Game {
         from = to;
         auto copy = board;
 
-        if (move(from, direction)) {
-            std::cout << "MOVE_COMMITTED\n";
-            advance_turn(board);
-        }
-        else {
+        if (!move(from, direction)) {
             board = copy;
             std::cout << "BAD_MOVE_ROW_IS_FULL\n";
+            return;
         }
 
+        auto collisions = generate_all_collisions(board);
+        if (!collisions.empty()) {
+            for (auto& collision : collisions) {
+                remove_collision(board, collision);
+            }
+        }
+
+        std::cout << "MOVE_COMMITTED\n";
+        advance_turn(board);
     }
 
 };
