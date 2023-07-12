@@ -93,6 +93,7 @@ struct Game {
 
             if (offset + 2 * (size * 2 - 1 - offset) - 1 != line.size()) {
                 std::cout << "WRONG_BOARD_ROW_LENGTH\n";
+                board.clear();
                 return;
             }
 
@@ -113,10 +114,12 @@ struct Game {
 
         if (white_count + white.pieces_number > white_player_pieces) {
             std::cout << "WRONG_WHITE_PAWNS_NUMBER\n";
+            board.clear();
             return;
         }
         if (black_count + black.pieces_number > black_player_pieces) {
             std::cout << "WRONG_BLACK_PAWNS_NUMBER\n";
+            board.clear();
             return;
         }
 
@@ -125,6 +128,12 @@ struct Game {
 
     void print_game_board() {
     
+        if (board.empty()) {
+            
+            std::cout << "EMPTY_BOARD\n";
+            return;
+        }
+
         std::cout << size << " " << pieces_limit << " " << white_player_pieces << " " << black_player_pieces << "\n";
         std::cout << white.pieces_number << " " << black.pieces_number << " " << current_player->sign << "\n";
         
@@ -149,6 +158,7 @@ struct Game {
             std::cout << "\n";
         }
     
+        std::cout << "\n";
     }
 
     void print_game_state() {
