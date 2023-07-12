@@ -6,35 +6,41 @@
 #include <algorithm>
 
 #define EMPTY '_'
+#define WHITE 'W'
+#define BLACK 'B'
 
 
-struct Player {
+struct Collision {
 
-    char sign;
-    int pieces_number;
+    int begin;
+    int end;
 
 };
 
+struct Board {
+
+    int white_reserve;
+    int black_reserve;
+
+    std::vector<char> board;
+
+};
 
 struct Game {
 
-    Player* current_player;
-    Player white;
-    Player black;
+    char current_player;
 
     int size;
     int pieces_limit;
     int white_player_pieces;
     int black_player_pieces;
 
-    std::string state;
-
-    std::vector<char> board;
+    Board board;
 
     void create_empty_board() {
 
-        board.clear();
-        board.resize((2 * size + 1) * (2 * size + 1), NULL);
+        board.board.clear();
+        board.board.resize((2 * size + 1) * (2 * size + 1), NULL);
 
         for (int i = 1; i < 2 * size; i++) {
 
@@ -59,31 +65,21 @@ struct Game {
             i = (2 * size + 1) * (y + x - size) + x;
         }
 
-        return &board[i];
+        return &board.board[i];
     }
 
     void load_game_board() {
 
-        char s_current_player;
-
         scanf("%d %d %d %d\n", &size, &pieces_limit, &white_player_pieces, &black_player_pieces);
-        scanf("%d %d %c", &white.pieces_number, &black.pieces_number, &s_current_player);
-
-        if (s_current_player == white.sign) {
-            current_player = &white;
-        }
-        else
-        {
-            current_player = &black;
-        }
+        scanf("%d %d %c", &board.white_reserve, &board.black_reserve, &current_player);
 
         create_empty_board();
 
         std::string line;
         std::getline(std::cin, line);
 
-        auto it = board.begin();
-        auto end = board.end();
+        auto it = board.board.begin();
+        auto end = board.board.end();
 
         for (int i = 0; i < size * 2 - 1; i++) {
 
@@ -93,7 +89,7 @@ struct Game {
 
             if (offset + 2 * (size * 2 - 1 - offset) - 1 != line.size()) {
                 std::cout << "WRONG_BOARD_ROW_LENGTH\n";
-                board.clear();
+                board.board.clear();
                 return;
             }
 
@@ -109,17 +105,17 @@ struct Game {
             }
         }
 
-        int white_count = std::count(board.begin(), board.end(), white.sign);
-        int black_count = std::count(board.begin(), board.end(), black.sign);
+        int white_count = std::count(board.board.begin(), board.board.end(), WHITE);
+        int black_count = std::count(board.board.begin(), board.board.end(), BLACK);
 
-        if (white_count + white.pieces_number > white_player_pieces) {
+        if (white_count + board.white_reserve > white_player_pieces) {
             std::cout << "WRONG_WHITE_PAWNS_NUMBER\n";
-            board.clear();
+            board.board.clear();
             return;
         }
-        if (black_count + black.pieces_number > black_player_pieces) {
+        if (black_count + board.black_reserve > black_player_pieces) {
             std::cout << "WRONG_BLACK_PAWNS_NUMBER\n";
-            board.clear();
+            board.board.clear();
             return;
         }
 
@@ -128,17 +124,17 @@ struct Game {
 
     void print_game_board() {
     
-        if (board.empty()) {
+        if (board.board.empty()) {
             
             std::cout << "EMPTY_BOARD\n";
             return;
         }
 
         std::cout << size << " " << pieces_limit << " " << white_player_pieces << " " << black_player_pieces << "\n";
-        std::cout << white.pieces_number << " " << black.pieces_number << " " << current_player->sign << "\n";
+        std::cout << board.white_reserve << " " << board.black_reserve << " " << current_player << "\n";
         
-        auto it = board.begin();
-        auto end = board.end();
+        auto it = board.board.begin();
+        auto end = board.board.end();
 
         for (int i = 0; i < size * 2 - 1; i++) {
 
@@ -161,12 +157,10 @@ struct Game {
         std::cout << "\n";
     }
 
-    void print_game_state() {
-        std::cout << state;
-    }
+    void do_move(const std::string& line) {
+        
 
-    void do_move() {
-    
+
     }
 
 };
@@ -175,9 +169,6 @@ struct Game {
 int main() {
 
     Game game;
-
-    game.white.sign = 'W';
-    game.black.sign = 'B';
 
     std::string line;
     while (std::getline(std::cin, line)) {
@@ -189,10 +180,7 @@ int main() {
             game.print_game_board();
         }
         else if (line.rfind("DO_MOVE", 0) == 0) {
-            game.do_move();
-        }
-        else if (line.rfind("PRINT_GAME_STATE", 0) == 0) {
-            game.print_game_state();
+            game.do_move(std::string(line.begin() + 8, line.end()));
         }
 
     }
