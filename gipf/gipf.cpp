@@ -170,6 +170,22 @@ struct Game {
             return;
         }
 
+        auto collisions = generate_all_collisions(board);
+        if (!collisions.empty()) {
+
+            if (collisions.size() > 1) {
+                std::cout << "ERROR_FOUND_" << collisions.size() << "_ROWS_OF_LENGTH_K\n";
+                board.board.clear();
+                return;
+            }
+            else {
+                std::cout << "ERROR_FOUND_" << collisions.size() << "_ROW_OF_LENGTH_K\n";
+                board.board.clear();
+                return;
+            }
+            
+        }
+
         std::cout << "BOARD_STATE_OK\n";
     }
 
@@ -313,7 +329,7 @@ struct Game {
                 }
                 else
                 {
-                    if (count >= pieces_limit) {
+                    if (count >= pieces_limit && token != EMPTY) {
 
                         char* from = ch - count * move.direction;
                         char* to = ch - move.direction;
